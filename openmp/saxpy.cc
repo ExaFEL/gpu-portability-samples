@@ -19,6 +19,9 @@ int main() {
     z[idx] = 0.0f;
   }
 
+  // Note: if you have unified shared memory on the GPU, you can replace this with:
+  // #pragma omp requires unified_shared_memory
+
   #pragma omp target map(x[:num_elements], y[:num_elements], z[:num_elements])
   {
 
