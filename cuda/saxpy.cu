@@ -7,16 +7,14 @@ __global__ void saxpy(const size_t num_elements, const float alpha,
 }
 
 int main() {
-  float *x, *y, *z;
-  float *d_x, *d_y, *d_z;
-
   size_t num_elements = 1 << 20;
   size_t buffer_size = num_elements * sizeof(float);
 
-  x = (float *)malloc(buffer_size);
-  y = (float *)malloc(buffer_size);
-  z = (float *)malloc(buffer_size);
+  float *x = (float *)malloc(buffer_size);
+  float *y = (float *)malloc(buffer_size);
+  float *z = (float *)malloc(buffer_size);
 
+  float *d_x, *d_y, *d_z;
   cudaMalloc(&d_x, buffer_size);
   cudaMalloc(&d_y, buffer_size);
   cudaMalloc(&d_z, buffer_size);
@@ -50,4 +48,6 @@ int main() {
   free(x);
   free(y);
   free(z);
+
+  return 0;
 }
