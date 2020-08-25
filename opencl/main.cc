@@ -27,13 +27,7 @@
 #include <string>
 #include <cassert>
 
-size_t gwx = 512;
-
-cl::CommandQueue commandQueue;
-cl::Kernel kernel;
-cl::Buffer deviceMemDst;
-
-static std::vector<cl_uchar> readSPIRVFromFile(
+static std::vector<cl_uchar> read_file(
     const std::string& filename )
 {
     std::ifstream is(filename, std::ios::binary);
@@ -112,42 +106,9 @@ static cl::Program createProgramWithIL(
     return cl::Program{ program };
 }
 
-static void init( void )
-{
-    // No initialization is needed for this sample.
-}
-
-static void go()
-{
-    kernel.setArg(0, deviceMemDst);
-
-    commandQueue.enqueueNDRangeKernel(
-        kernel,
-        cl::NullRange,
-        cl::NDRange{gwx});
-}
-
-static void checkResults()
-{
-    // No results to check for this sample, but do verify that execution
-    // has completed.
-    commandQueue.finish();
-}
-
-int main(
-    int argc,
-    char** argv )
+void parse_arguments(int argc, char **argv, int &platformIndex, int &deviceIndex, size_t &gwx)
 {
     bool printUsage = false;
-    int platformIndex = 0;
-    int deviceIndex = 0;
-
-    const char* fileName = 
-        ( sizeof(void*) == 8 ) ?
-        "kernel64.spv" :
-        "kernel32.spv";
-    const char* kernelName = "Test";
-    const char* buildOptions = NULL;
 
     if( argc < 1 )
     {
@@ -171,27 +132,6 @@ int main(
                     platformIndex = strtol(argv[i], NULL, 10);
                 }
             }
-            else if( !strcmp( argv[i], "-file" ) )
-            {
-                if( ++i < argc )
-                {
-                    fileName = argv[i];
-                }
-            }
-            else if( !strcmp( argv[i], "-name" ) )
-            {
-                if( ++i < argc )
-                {
-                    kernelName = argv[i];
-                }
-            }
-            else if( !strcmp( argv[i], "-options" ) )
-            {
-                if( ++i < argc )
-                {
-                    buildOptions = argv[i];
-                }
-            }
             else if( !strcmp( argv[i], "-gwx" ) )
             {
                 if( ++i < argc )
@@ -210,17 +150,33 @@ int main(
         fprintf(stderr,
             "Usage: spirvkernelfromfile [options]\n"
             "Options:\n"
-            "      -d: Device Index (default = 0)\n"
-            "      -p: Platform Index (default = 0)\n"
-            "      -file: Kernel File Name (default = %s)\n"
-            "      -name: Kernel Name (default = Test)\n"
-            "      -options: Program Build Options (default = NULL)\n"
-            "      -gwx: Global Work Size (default = 512)\n",
-            ( sizeof(void*) == 8 ) ? "sample_kernel64.spv" : "sample_kernel32.spv"
+            "      -d: Device Index (default = %d)\n"
+            "      -p: Platform Index (default = %d)\n"
+            "      -gwx: Global Work Size (default = %lu)\n",
+		deviceIndex,
+		platformIndex,
+		gwx
             );
 
-        return -1;
+	exit(-1);
     }
+}
+
+int main(int argc, char** argv)
+{
+    int platformIndex = 0;
+    int deviceIndex = 0;
+
+    size_t gwx = 512;
+
+    const char* fileName = 
+        ( sizeof(void*) == 8 ) ?
+        "kernel64.spv" :
+        "kernel32.spv";
+    const char* kernelName = "Test";
+    const char* buildOptions = NULL;
+
+    parse_arguments(argc, argv, platformIndex, deviceIndex, gwx);
 
     std::vector<cl::Platform> platforms;
     cl::Platform::get(&platforms);
@@ -237,10 +193,10 @@ int main(
         devices[deviceIndex].getInfo<CL_DEVICE_ADDRESS_BITS>() );
 
     cl::Context context{devices[deviceIndex]};
-    commandQueue = cl::CommandQueue{context, devices[deviceIndex]};
+    cl::CommandQueue commandQueue = cl::CommandQueue{context, devices[deviceIndex]};
 
     printf("Reading SPIR-V from file: %s\n", fileName );
-    std::vector<cl_uchar> spirv = readSPIRVFromFile(fileName);
+    std::vector<cl_uchar> spirv = read_file(fileName);
 
     printf("Building program with build options: %s\n",
         buildOptions ? buildOptions : "(none)" );
@@ -254,16 +210,21 @@ int main(
             program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(device).c_str() );
     }
     printf("Creating kernel: %s\n", kernelName );
-    kernel = cl::Kernel{ program, kernelName };
+    cl::Kernel kernel = cl::Kernel{ program, kernelName };
 
-    deviceMemDst = cl::Buffer{
+    cl::Buffer deviceMemDst = cl::Buffer{
         context,
         CL_MEM_ALLOC_HOST_PTR,
-        gwx * sizeof( cl_uint ) };
+        gwx * sizeof(cl_uint) };
 
-    init();
-    go();
-    checkResults();
+    kernel.setArg(0, deviceMemDst);
+
+    commandQueue.enqueueNDRangeKernel(
+        kernel,
+        cl::NullRange,
+        cl::NDRange{gwx});
+
+    commandQueue.finish();
 
     printf("Done.\n");
 
