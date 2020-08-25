@@ -1,6 +1,8 @@
+#include <stdio.h>
+
 __global__
-void saxpy(const float alpha,
-           const size_t num_elements,
+void saxpy(const size_t num_elements,
+           const float alpha,
            const float *x, const float *y, float *z)
 {
   int idx = (blockIdx.x * blockDim.x) + threadIdx.x;
@@ -30,10 +32,19 @@ int main()
 
   cudaMemcpy(d_x, x, num_elements * sizeof(float), cudaMemcpyHostToDevice);
   cudaMemcpy(d_y, y, num_elements * sizeof(float), cudaMemcpyHostToDevice);
+  cudaMemcpy(d_z, z, num_elements * sizeof(float), cudaMemcpyHostToDevice);
 
   saxpy<<<(num_elements+255)/256, 256>>>(num_elements, 2.0f, d_x, d_y, d_z);
 
   cudaMemcpy(z, d_z, num_elements * sizeof(float), cudaMemcpyDeviceToHost);
+
+  cudaDeviceSynchronize();
+
+  float error = 0.0;
+  for (size_t idx = 0; idx < num_elements; idx++) {
+    error = max(error, abs(z[idx] - 4.0f));
+  }
+  printf("error: %e\n", error);
 
   cudaFree(d_x);
   cudaFree(d_y);
