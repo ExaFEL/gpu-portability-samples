@@ -17,7 +17,7 @@ all:  $(BIN)
 $(BIN): $(OBJ) $(OPENCL_OBJ)
 	$(CXX) -o $@ $(NVCCFLAGS) $< $(LDFLAGS)
 
-%.cc.o:%.cc
+%.o:%.cc
 	$(CXX) -c -o $@ $(CXXFLAGS) $<
 
 %64.ll:%.cl
