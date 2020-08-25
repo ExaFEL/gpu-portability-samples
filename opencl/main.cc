@@ -133,11 +133,6 @@ int main(int argc, char **argv) {
   int platform_index = 0;
   int device_index = 0;
 
-  const char *fileName =
-      (sizeof(void *) == 8) ? "kernel64.spv" : "kernel32.spv";
-  const char *kernelName = "saxpy";
-  const char *buildOptions = NULL;
-
   parse_arguments(argc, argv, platform_index, device_index);
 
   std::vector<cl::Platform> platforms;
@@ -158,28 +153,36 @@ int main(int argc, char **argv) {
   cl::CommandQueue queue =
       cl::CommandQueue{context, devices[device_index]};
 
-  std::vector<cl_uchar> spirv = read_file(fileName);
+  const char *filename =
+      (sizeof(void *) == 8) ? "kernel64.spv" : "kernel32.spv";
+  std::vector<cl_uchar> spirv = read_file(filename);
+
   cl::Program program = createProgramWithIL(context, spirv);
-  program.build(buildOptions);
+  const char *build_options = NULL;
+  program.build(build_options);
+
   for (auto &device : program.getInfo<CL_PROGRAM_DEVICES>()) {
     printf("Program build log for device %s:\n",
            device.getInfo<CL_DEVICE_NAME>().c_str());
     printf("%s\n", program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(device).c_str());
   }
-  cl::Kernel kernel = cl::Kernel{program, kernelName};
+
+  const char *kernel_name = "saxpy";
+  cl::Kernel kernel = cl::Kernel{program, kernel_name};
 
   size_t num_elements = 1 << 20;
+  size_t buffer_size = num_elements * sizeof(cl_float);
 
   cl::Buffer d_x =
-      cl::Buffer{context, CL_MEM_ALLOC_HOST_PTR, num_elements * sizeof(cl_float)};
+      cl::Buffer{context, CL_MEM_ALLOC_HOST_PTR, buffer_size};
   cl::Buffer d_y =
-      cl::Buffer{context, CL_MEM_ALLOC_HOST_PTR, num_elements * sizeof(cl_float)};
+      cl::Buffer{context, CL_MEM_ALLOC_HOST_PTR, buffer_size};
   cl::Buffer d_z =
-      cl::Buffer{context, CL_MEM_ALLOC_HOST_PTR, num_elements * sizeof(cl_float)};
+      cl::Buffer{context, CL_MEM_ALLOC_HOST_PTR, buffer_size};
 
-  float *x = (float *)queue.enqueueMapBuffer(d_x, CL_TRUE, CL_MAP_WRITE, 0, num_elements * sizeof(cl_float));
-  float *y = (float *)queue.enqueueMapBuffer(d_y, CL_TRUE, CL_MAP_WRITE, 0, num_elements * sizeof(cl_float));
-  float *z = (float *)queue.enqueueMapBuffer(d_z, CL_TRUE, CL_MAP_WRITE, 0, num_elements * sizeof(cl_float));
+  float *x = (float *)queue.enqueueMapBuffer(d_x, CL_TRUE, CL_MAP_WRITE, 0, buffer_size);
+  float *y = (float *)queue.enqueueMapBuffer(d_y, CL_TRUE, CL_MAP_WRITE, 0, buffer_size);
+  float *z = (float *)queue.enqueueMapBuffer(d_z, CL_TRUE, CL_MAP_WRITE, 0, buffer_size);
 
   for (size_t idx = 0; idx < num_elements; idx++) {
     x[idx] = 1.0f;
@@ -198,7 +201,7 @@ int main(int argc, char **argv) {
 
   queue.enqueueNDRangeKernel(kernel, cl::NullRange, cl::NDRange{num_elements});
 
-  z = (float *)queue.enqueueMapBuffer(d_z, CL_TRUE, CL_MAP_READ, 0, num_elements * sizeof(cl_float));
+  z = (float *)queue.enqueueMapBuffer(d_z, CL_TRUE, CL_MAP_READ, 0, buffer_size);
 
   float error = 0.0;
   for (size_t idx = 0; idx < num_elements; idx++) {
