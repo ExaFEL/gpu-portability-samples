@@ -1,3 +1,4 @@
+// clang-format off
 /*
 // Copyright (c) 2019-2020 Ben Ashbaugh
 //
@@ -19,6 +20,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 */
+// clang-format on
 
 #include <CL/cl2.hpp>
 
@@ -27,206 +29,166 @@
 #include <string>
 #include <cassert>
 
-static std::vector<cl_uchar> read_file(
-    const std::string& filename )
-{
-    std::ifstream is(filename, std::ios::binary);
-    std::vector<cl_uchar> ret;
-    if (!is.good()) {
-        return ret;
-    }
-
-    size_t filesize = 0;
-    is.seekg(0, std::ios::end);
-    filesize = (size_t)is.tellg();
-    is.seekg(0, std::ios::beg);
-
-    ret.resize(filesize);
-    ret.insert(
-        ret.begin(),
-        std::istreambuf_iterator<char>(is),
-        std::istreambuf_iterator<char>() );
-
+static std::vector<cl_uchar> read_file(const std::string &filename) {
+  std::ifstream is(filename, std::ios::binary);
+  std::vector<cl_uchar> ret;
+  if (!is.good()) {
     return ret;
+  }
+
+  size_t filesize = 0;
+  is.seekg(0, std::ios::end);
+  filesize = (size_t)is.tellg();
+  is.seekg(0, std::ios::beg);
+
+  ret.resize(filesize);
+  ret.insert(ret.begin(), std::istreambuf_iterator<char>(is),
+             std::istreambuf_iterator<char>());
+
+  return ret;
 }
 
-static cl_uint getPlatformVersion(const cl::Platform& platform)
-{
-    cl_uint major = 0;
-    cl_uint minor = 0;
+static cl_uint getPlatformVersion(const cl::Platform &platform) {
+  cl_uint major = 0;
+  cl_uint minor = 0;
 
-    std::string version = platform.getInfo<CL_PLATFORM_VERSION>();
+  std::string version = platform.getInfo<CL_PLATFORM_VERSION>();
 
-    std::cout << "getPlatformVersion " << version << std::endl;
-    // The platform version string has the form:
-    //   OpenCL <Major>.<Minor> <Vendor Specific Info>
-    const std::string prefix{"OpenCL "};
-    if (!version.compare(0, prefix.length(), prefix)) {
-        const char* check = version.c_str() + prefix.length();
-        while (isdigit(check[0])) {
-            major *= 10;
-            major += check[0] - '0';
-            ++check;
-        }
-        if (check[0] == '.') {
-            ++check;
-        }
-        while (isdigit(check[0])) {
-            minor *= 10;
-            minor += check[0] - '0';
-            ++check;
-        }
+  std::cout << "getPlatformVersion " << version << std::endl;
+  // The platform version string has the form:
+  //   OpenCL <Major>.<Minor> <Vendor Specific Info>
+  const std::string prefix{"OpenCL "};
+  if (!version.compare(0, prefix.length(), prefix)) {
+    const char *check = version.c_str() + prefix.length();
+    while (isdigit(check[0])) {
+      major *= 10;
+      major += check[0] - '0';
+      ++check;
     }
-
-    return (major << 16) | minor;
-}
-
-static cl::Program createProgramWithIL(
-    const cl::Context& context,
-    const std::vector<cl_uchar>& il )
-{
-    cl_program program = nullptr;
-
-    std::vector<cl::Device> devices = context.getInfo<CL_CONTEXT_DEVICES>();
-    if (!devices.empty()) {
-        cl::Platform platform{ devices[0].getInfo<CL_DEVICE_PLATFORM>() };
-        if (getPlatformVersion(platform) >= 0x00020001) {
-            program = clCreateProgramWithIL(
-                context(),
-                il.data(),
-                il.size(),
-                nullptr);
-        }
-        else
-        {
-	  assert(false);
-        }
+    if (check[0] == '.') {
+      ++check;
     }
+    while (isdigit(check[0])) {
+      minor *= 10;
+      minor += check[0] - '0';
+      ++check;
+    }
+  }
 
-    return cl::Program{ program };
+  return (major << 16) | minor;
 }
 
-void parse_arguments(int argc, char **argv, int &platformIndex, int &deviceIndex, size_t &gwx)
-{
-    bool printUsage = false;
+static cl::Program createProgramWithIL(const cl::Context &context,
+                                       const std::vector<cl_uchar> &il) {
+  cl_program program = nullptr;
 
-    if( argc < 1 )
-    {
+  std::vector<cl::Device> devices = context.getInfo<CL_CONTEXT_DEVICES>();
+  if (!devices.empty()) {
+    cl::Platform platform{devices[0].getInfo<CL_DEVICE_PLATFORM>()};
+    if (getPlatformVersion(platform) >= 0x00020001) {
+      program = clCreateProgramWithIL(context(), il.data(), il.size(), nullptr);
+    } else {
+      assert(false);
+    }
+  }
+
+  return cl::Program{program};
+}
+
+void parse_arguments(int argc, char **argv, int &platformIndex,
+                     int &deviceIndex, size_t &gwx) {
+  bool printUsage = false;
+
+  if (argc < 1) {
+    printUsage = true;
+  } else {
+    for (size_t i = 1; i < argc; i++) {
+      if (!strcmp(argv[i], "-d")) {
+        if (++i < argc) {
+          deviceIndex = strtol(argv[i], NULL, 10);
+        }
+      } else if (!strcmp(argv[i], "-p")) {
+        if (++i < argc) {
+          platformIndex = strtol(argv[i], NULL, 10);
+        }
+      } else if (!strcmp(argv[i], "-gwx")) {
+        if (++i < argc) {
+          gwx = strtol(argv[i], NULL, 10);
+        }
+      } else {
         printUsage = true;
+      }
     }
-    else
-    {
-        for( size_t i = 1; i < argc; i++ )
-        {
-            if( !strcmp( argv[i], "-d" ) )
-            {
-                if( ++i < argc )
-                {
-                    deviceIndex = strtol(argv[i], NULL, 10);
-                }
-            }
-            else if( !strcmp( argv[i], "-p" ) )
-            {
-                if( ++i < argc )
-                {
-                    platformIndex = strtol(argv[i], NULL, 10);
-                }
-            }
-            else if( !strcmp( argv[i], "-gwx" ) )
-            {
-                if( ++i < argc )
-                {
-                    gwx = strtol(argv[i], NULL, 10);
-                }
-            }
-            else
-            {
-                printUsage = true;
-            }
-        }
-    }
-    if( printUsage )
-    {
-        fprintf(stderr,
+  }
+  if (printUsage) {
+    fprintf(stderr,
             "Usage: spirvkernelfromfile [options]\n"
             "Options:\n"
             "      -d: Device Index (default = %d)\n"
             "      -p: Platform Index (default = %d)\n"
             "      -gwx: Global Work Size (default = %lu)\n",
-		deviceIndex,
-		platformIndex,
-		gwx
-            );
+            deviceIndex, platformIndex, gwx);
 
-	exit(-1);
-    }
+    exit(-1);
+  }
 }
 
-int main(int argc, char** argv)
-{
-    int platformIndex = 0;
-    int deviceIndex = 0;
+int main(int argc, char **argv) {
+  int platformIndex = 0;
+  int deviceIndex = 0;
 
-    size_t gwx = 512;
+  size_t gwx = 512;
 
-    const char* fileName = 
-        ( sizeof(void*) == 8 ) ?
-        "kernel64.spv" :
-        "kernel32.spv";
-    const char* kernelName = "Test";
-    const char* buildOptions = NULL;
+  const char *fileName =
+      (sizeof(void *) == 8) ? "kernel64.spv" : "kernel32.spv";
+  const char *kernelName = "saxpy";
+  const char *buildOptions = NULL;
 
-    parse_arguments(argc, argv, platformIndex, deviceIndex, gwx);
+  parse_arguments(argc, argv, platformIndex, deviceIndex, gwx);
 
-    std::vector<cl::Platform> platforms;
-    cl::Platform::get(&platforms);
+  std::vector<cl::Platform> platforms;
+  cl::Platform::get(&platforms);
 
-    printf("Running on platform: %s\n",
-        platforms[platformIndex].getInfo<CL_PLATFORM_NAME>().c_str() );
+  printf("Running on platform: %s\n",
+         platforms[platformIndex].getInfo<CL_PLATFORM_NAME>().c_str());
 
-    std::vector<cl::Device> devices;
-    platforms[platformIndex].getDevices(CL_DEVICE_TYPE_ALL, &devices);
+  std::vector<cl::Device> devices;
+  platforms[platformIndex].getDevices(CL_DEVICE_TYPE_ALL, &devices);
 
-    printf("Running on device: %s\n",
-        devices[deviceIndex].getInfo<CL_DEVICE_NAME>().c_str() );
-    printf("CL_DEVICE_ADDRESS_BITS is %d for this device.\n",
-        devices[deviceIndex].getInfo<CL_DEVICE_ADDRESS_BITS>() );
+  printf("Running on device: %s\n",
+         devices[deviceIndex].getInfo<CL_DEVICE_NAME>().c_str());
+  printf("CL_DEVICE_ADDRESS_BITS is %d for this device.\n",
+         devices[deviceIndex].getInfo<CL_DEVICE_ADDRESS_BITS>());
 
-    cl::Context context{devices[deviceIndex]};
-    cl::CommandQueue commandQueue = cl::CommandQueue{context, devices[deviceIndex]};
+  cl::Context context{devices[deviceIndex]};
+  cl::CommandQueue commandQueue =
+      cl::CommandQueue{context, devices[deviceIndex]};
 
-    printf("Reading SPIR-V from file: %s\n", fileName );
-    std::vector<cl_uchar> spirv = read_file(fileName);
+  printf("Reading SPIR-V from file: %s\n", fileName);
+  std::vector<cl_uchar> spirv = read_file(fileName);
 
-    printf("Building program with build options: %s\n",
-        buildOptions ? buildOptions : "(none)" );
-    cl::Program program = createProgramWithIL( context, spirv );
-    program.build(buildOptions);
-    for( auto& device : program.getInfo<CL_PROGRAM_DEVICES>() )
-    {
-        printf("Program build log for device %s:\n",
-            device.getInfo<CL_DEVICE_NAME>().c_str() );
-        printf("%s\n",
-            program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(device).c_str() );
-    }
-    printf("Creating kernel: %s\n", kernelName );
-    cl::Kernel kernel = cl::Kernel{ program, kernelName };
+  printf("Building program with build options: %s\n",
+         buildOptions ? buildOptions : "(none)");
+  cl::Program program = createProgramWithIL(context, spirv);
+  program.build(buildOptions);
+  for (auto &device : program.getInfo<CL_PROGRAM_DEVICES>()) {
+    printf("Program build log for device %s:\n",
+           device.getInfo<CL_DEVICE_NAME>().c_str());
+    printf("%s\n", program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(device).c_str());
+  }
+  printf("Creating kernel: %s\n", kernelName);
+  cl::Kernel kernel = cl::Kernel{program, kernelName};
 
-    cl::Buffer deviceMemDst = cl::Buffer{
-        context,
-        CL_MEM_ALLOC_HOST_PTR,
-        gwx * sizeof(cl_uint) };
+  cl::Buffer deviceMemDst =
+      cl::Buffer{context, CL_MEM_ALLOC_HOST_PTR, gwx * sizeof(cl_uint)};
 
-    kernel.setArg(0, deviceMemDst);
+  kernel.setArg(0, deviceMemDst);
 
-    commandQueue.enqueueNDRangeKernel(
-        kernel,
-        cl::NullRange,
-        cl::NDRange{gwx});
+  commandQueue.enqueueNDRangeKernel(kernel, cl::NullRange, cl::NDRange{gwx});
 
-    commandQueue.finish();
+  commandQueue.finish();
 
-    printf("Done.\n");
+  printf("Done.\n");
 
-    return 0;
+  return 0;
 }
