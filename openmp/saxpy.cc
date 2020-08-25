@@ -1,7 +1,7 @@
-#include <cstddef>
-#include <cstdlib>
-#include <cstdio>
 #include <cmath>
+#include <cstddef>
+#include <cstdio>
+#include <cstdlib>
 
 int main() {
   size_t num_elements = 1 << 20;
@@ -19,17 +19,17 @@ int main() {
     z[idx] = 0.0f;
   }
 
-  // Note: if you have unified shared memory on the GPU, you can replace this with:
+  // Note: if you have unified shared memory on the GPU, you can
+  // replace the map clause with:
+  //
   // #pragma omp requires unified_shared_memory
 
-  #pragma omp target map(x[:num_elements], y[:num_elements], z[:num_elements])
+#pragma omp target map(x[:num_elements], y[:num_elements], z[:num_elements])
   {
-
-    #pragma omp teams distribute parallel for
+#pragma omp teams distribute parallel for
     for (size_t idx = 0; idx < num_elements; idx++) {
       z[idx] += alpha * x[idx] + y[idx];
     }
-
   }
 
   float error = 0.0;
