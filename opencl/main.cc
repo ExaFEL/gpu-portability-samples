@@ -150,8 +150,7 @@ int main(int argc, char **argv) {
          devices[device_index].getInfo<CL_DEVICE_ADDRESS_BITS>());
 
   cl::Context context{devices[device_index]};
-  cl::CommandQueue queue =
-      cl::CommandQueue{context, devices[device_index]};
+  cl::CommandQueue queue = cl::CommandQueue{context, devices[device_index]};
 
   const char *filename =
       (sizeof(void *) == 8) ? "kernel64.spv" : "kernel32.spv";
@@ -173,16 +172,16 @@ int main(int argc, char **argv) {
   size_t num_elements = 1 << 20;
   size_t buffer_size = num_elements * sizeof(cl_float);
 
-  cl::Buffer d_x =
-      cl::Buffer{context, CL_MEM_ALLOC_HOST_PTR, buffer_size};
-  cl::Buffer d_y =
-      cl::Buffer{context, CL_MEM_ALLOC_HOST_PTR, buffer_size};
-  cl::Buffer d_z =
-      cl::Buffer{context, CL_MEM_ALLOC_HOST_PTR, buffer_size};
+  cl::Buffer d_x = cl::Buffer{context, CL_MEM_ALLOC_HOST_PTR, buffer_size};
+  cl::Buffer d_y = cl::Buffer{context, CL_MEM_ALLOC_HOST_PTR, buffer_size};
+  cl::Buffer d_z = cl::Buffer{context, CL_MEM_ALLOC_HOST_PTR, buffer_size};
 
-  float *x = (float *)queue.enqueueMapBuffer(d_x, CL_TRUE, CL_MAP_WRITE, 0, buffer_size);
-  float *y = (float *)queue.enqueueMapBuffer(d_y, CL_TRUE, CL_MAP_WRITE, 0, buffer_size);
-  float *z = (float *)queue.enqueueMapBuffer(d_z, CL_TRUE, CL_MAP_WRITE, 0, buffer_size);
+  float *x = (float *)queue.enqueueMapBuffer(d_x, CL_TRUE, CL_MAP_WRITE, 0,
+                                             buffer_size);
+  float *y = (float *)queue.enqueueMapBuffer(d_y, CL_TRUE, CL_MAP_WRITE, 0,
+                                             buffer_size);
+  float *z = (float *)queue.enqueueMapBuffer(d_z, CL_TRUE, CL_MAP_WRITE, 0,
+                                             buffer_size);
 
   for (size_t idx = 0; idx < num_elements; idx++) {
     x[idx] = 1.0f;
@@ -201,7 +200,8 @@ int main(int argc, char **argv) {
 
   queue.enqueueNDRangeKernel(kernel, cl::NullRange, cl::NDRange{num_elements});
 
-  z = (float *)queue.enqueueMapBuffer(d_z, CL_TRUE, CL_MAP_READ, 0, buffer_size);
+  z = (float *)queue.enqueueMapBuffer(d_z, CL_TRUE, CL_MAP_READ, 0,
+                                      buffer_size);
 
   float error = 0.0;
   for (size_t idx = 0; idx < num_elements; idx++) {
