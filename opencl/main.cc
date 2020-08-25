@@ -28,6 +28,7 @@
 #include <fstream>
 #include <string>
 #include <cassert>
+#include <cmath>
 
 static std::vector<cl_uchar> read_file(const std::string &filename) {
   std::ifstream is(filename, std::ios::binary);
@@ -95,8 +96,8 @@ static cl::Program createProgramWithIL(const cl::Context &context,
   return cl::Program{program};
 }
 
-void parse_arguments(int argc, char **argv, int &platformIndex,
-                     int &deviceIndex, size_t &gwx) {
+void parse_arguments(int argc, char **argv, int &platform_index,
+                     int &device_index) {
   bool printUsage = false;
 
   if (argc < 1) {
@@ -105,15 +106,11 @@ void parse_arguments(int argc, char **argv, int &platformIndex,
     for (size_t i = 1; i < argc; i++) {
       if (!strcmp(argv[i], "-d")) {
         if (++i < argc) {
-          deviceIndex = strtol(argv[i], NULL, 10);
+          device_index = strtol(argv[i], NULL, 10);
         }
       } else if (!strcmp(argv[i], "-p")) {
         if (++i < argc) {
-          platformIndex = strtol(argv[i], NULL, 10);
-        }
-      } else if (!strcmp(argv[i], "-gwx")) {
-        if (++i < argc) {
-          gwx = strtol(argv[i], NULL, 10);
+          platform_index = strtol(argv[i], NULL, 10);
         }
       } else {
         printUsage = true;
@@ -125,50 +122,43 @@ void parse_arguments(int argc, char **argv, int &platformIndex,
             "Usage: spirvkernelfromfile [options]\n"
             "Options:\n"
             "      -d: Device Index (default = %d)\n"
-            "      -p: Platform Index (default = %d)\n"
-            "      -gwx: Global Work Size (default = %lu)\n",
-            deviceIndex, platformIndex, gwx);
+            "      -p: Platform Index (default = %d)\n",
+            device_index, platform_index);
 
     exit(-1);
   }
 }
 
 int main(int argc, char **argv) {
-  int platformIndex = 0;
-  int deviceIndex = 0;
-
-  size_t gwx = 512;
+  int platform_index = 0;
+  int device_index = 0;
 
   const char *fileName =
       (sizeof(void *) == 8) ? "kernel64.spv" : "kernel32.spv";
   const char *kernelName = "saxpy";
   const char *buildOptions = NULL;
 
-  parse_arguments(argc, argv, platformIndex, deviceIndex, gwx);
+  parse_arguments(argc, argv, platform_index, device_index);
 
   std::vector<cl::Platform> platforms;
   cl::Platform::get(&platforms);
 
   printf("Running on platform: %s\n",
-         platforms[platformIndex].getInfo<CL_PLATFORM_NAME>().c_str());
+         platforms[platform_index].getInfo<CL_PLATFORM_NAME>().c_str());
 
   std::vector<cl::Device> devices;
-  platforms[platformIndex].getDevices(CL_DEVICE_TYPE_ALL, &devices);
+  platforms[platform_index].getDevices(CL_DEVICE_TYPE_ALL, &devices);
 
   printf("Running on device: %s\n",
-         devices[deviceIndex].getInfo<CL_DEVICE_NAME>().c_str());
+         devices[device_index].getInfo<CL_DEVICE_NAME>().c_str());
   printf("CL_DEVICE_ADDRESS_BITS is %d for this device.\n",
-         devices[deviceIndex].getInfo<CL_DEVICE_ADDRESS_BITS>());
+         devices[device_index].getInfo<CL_DEVICE_ADDRESS_BITS>());
 
-  cl::Context context{devices[deviceIndex]};
-  cl::CommandQueue commandQueue =
-      cl::CommandQueue{context, devices[deviceIndex]};
+  cl::Context context{devices[device_index]};
+  cl::CommandQueue queue =
+      cl::CommandQueue{context, devices[device_index]};
 
-  printf("Reading SPIR-V from file: %s\n", fileName);
   std::vector<cl_uchar> spirv = read_file(fileName);
-
-  printf("Building program with build options: %s\n",
-         buildOptions ? buildOptions : "(none)");
   cl::Program program = createProgramWithIL(context, spirv);
   program.build(buildOptions);
   for (auto &device : program.getInfo<CL_PROGRAM_DEVICES>()) {
@@ -176,19 +166,47 @@ int main(int argc, char **argv) {
            device.getInfo<CL_DEVICE_NAME>().c_str());
     printf("%s\n", program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(device).c_str());
   }
-  printf("Creating kernel: %s\n", kernelName);
   cl::Kernel kernel = cl::Kernel{program, kernelName};
 
-  cl::Buffer deviceMemDst =
-      cl::Buffer{context, CL_MEM_ALLOC_HOST_PTR, gwx * sizeof(cl_uint)};
+  size_t num_elements = 1 << 20;
 
-  kernel.setArg(0, deviceMemDst);
+  cl::Buffer d_x =
+      cl::Buffer{context, CL_MEM_ALLOC_HOST_PTR, num_elements * sizeof(cl_float)};
+  cl::Buffer d_y =
+      cl::Buffer{context, CL_MEM_ALLOC_HOST_PTR, num_elements * sizeof(cl_float)};
+  cl::Buffer d_z =
+      cl::Buffer{context, CL_MEM_ALLOC_HOST_PTR, num_elements * sizeof(cl_float)};
 
-  commandQueue.enqueueNDRangeKernel(kernel, cl::NullRange, cl::NDRange{gwx});
+  float *x = (float *)queue.enqueueMapBuffer(d_x, CL_TRUE, CL_MAP_WRITE, 0, num_elements * sizeof(cl_float));
+  float *y = (float *)queue.enqueueMapBuffer(d_y, CL_TRUE, CL_MAP_WRITE, 0, num_elements * sizeof(cl_float));
+  float *z = (float *)queue.enqueueMapBuffer(d_z, CL_TRUE, CL_MAP_WRITE, 0, num_elements * sizeof(cl_float));
 
-  commandQueue.finish();
+  for (size_t idx = 0; idx < num_elements; idx++) {
+    x[idx] = 1.0f;
+    y[idx] = 2.0f;
+    z[idx] = 0.0f;
+  }
 
-  printf("Done.\n");
+  queue.enqueueUnmapMemObject(d_x, x);
+  queue.enqueueUnmapMemObject(d_y, y);
+  queue.enqueueUnmapMemObject(d_z, z);
+
+  kernel.setArg(0, 2.0f);
+  kernel.setArg(1, d_x);
+  kernel.setArg(2, d_y);
+  kernel.setArg(3, d_z);
+
+  queue.enqueueNDRangeKernel(kernel, cl::NullRange, cl::NDRange{num_elements});
+
+  z = (float *)queue.enqueueMapBuffer(d_z, CL_TRUE, CL_MAP_READ, 0, num_elements * sizeof(cl_float));
+
+  float error = 0.0;
+  for (size_t idx = 0; idx < num_elements; idx++) {
+    error = fmax(error, fabs(z[idx] - 4.0f));
+  }
+  printf("error: %e\n", error);
+
+  queue.enqueueUnmapMemObject(d_z, z);
 
   return 0;
 }
