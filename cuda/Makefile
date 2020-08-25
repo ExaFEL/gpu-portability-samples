@@ -1,16 +1,7 @@
 NVCC ?= nvcc
 
-DEBUG ?= 0
-
 NVCCFLAGS ?=
-
 LDFLAGS ?=
-
-ifeq ($(strip $(DEBUG)),0)
-	NVCCFLAGS += -O3
-else
-	NVCCFLAGS += -O0
-endif
 
 BIN := saxpy
 
