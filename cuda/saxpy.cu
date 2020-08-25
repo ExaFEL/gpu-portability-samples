@@ -37,7 +37,7 @@ int main() {
 
   float error = 0.0;
   for (size_t idx = 0; idx < num_elements; idx++) {
-    error = max(error, abs(z[idx] - 4.0f));
+    error = fmax(error, fabs(z[idx] - 4.0f));
   }
   printf("error: %e\n", error);
 
