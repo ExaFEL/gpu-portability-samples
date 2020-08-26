@@ -7,13 +7,13 @@ OPENCL32_FLAGS ?= -Wall -cl-std=CL1.2 -target spir   -emit-llvm -Xclang -finclud
 CXXFLAGS ?= -Wall -std=c++11
 LDFLAGS ?= -lOpenCL
 
-BIN := saxpy
+BIN := saxpy histogram
 
 .PHONY: all
 all:  $(BIN)
 
-$(BIN): $(BIN:%=%_main.o) $(BIN:%=%_kernel32.spv) $(BIN:%=%_kernel64.spv)
-	$(CXX) -o $@ $(NVCCFLAGS) $< $(LDFLAGS)
+$(BIN): %:%_main.o $(BIN:%=%_kernel32.spv) $(BIN:%=%_kernel64.spv)
+	$(CXX) -o $@ $(CXXFLAGS) $< $(LDFLAGS)
 
 %.o:%.cc
 	$(CXX) -c -o $@ $(CXXFLAGS) $<

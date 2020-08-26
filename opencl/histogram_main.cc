@@ -32,6 +32,8 @@
 #include <cassert>
 #include <cmath>
 
+#define NUM_BUCKETS 128
+
 static std::vector<cl_uchar> read_file(const std::string &filename) {
   std::ifstream is(filename, std::ios::binary);
   std::vector<cl_uchar> ret;
@@ -79,7 +81,7 @@ void parse_arguments(int argc, char **argv, int &platform_index,
   }
   if (printUsage) {
     fprintf(stderr,
-            "Usage: saxpy [options]\n"
+            "Usage: histogram [options]\n"
             "Options:\n"
             "      -d: Device Index (default = %d)\n"
             "      -p: Platform Index (default = %d)\n",
@@ -113,7 +115,7 @@ int main(int argc, char **argv) {
   cl::CommandQueue queue = cl::CommandQueue{context, devices[device_index]};
 
   const char *filename =
-      (sizeof(void *) == 8) ? "saxpy_kernel64.spv" : "saxpy_kernel32.spv";
+      (sizeof(void *) == 8) ? "histogram_kernel64.spv" : "histogram_kernel32.spv";
   std::vector<cl_uchar> spirv = read_file(filename);
 
   cl::Program program = createProgramWithIL(context, spirv);
@@ -126,50 +128,52 @@ int main(int argc, char **argv) {
     printf("%s\n", program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(device).c_str());
   }
 
-  const char *kernel_name = "saxpy";
+  const char *kernel_name = "histogram";
   cl::Kernel kernel = cl::Kernel{program, kernel_name};
 
   size_t num_elements = 1 << 20;
-  size_t buffer_size = num_elements * sizeof(cl_float);
+  size_t data_size = num_elements * sizeof(cl_float);
+  size_t histogram_size = NUM_BUCKETS * sizeof(cl_uint);
 
-  cl::Buffer d_x = cl::Buffer{context, CL_MEM_ALLOC_HOST_PTR, buffer_size};
-  cl::Buffer d_y = cl::Buffer{context, CL_MEM_ALLOC_HOST_PTR, buffer_size};
-  cl::Buffer d_z = cl::Buffer{context, CL_MEM_ALLOC_HOST_PTR, buffer_size};
+  cl::Buffer d_data = cl::Buffer{context, CL_MEM_ALLOC_HOST_PTR, data_size};
+  cl::Buffer d_histogram = cl::Buffer{context, CL_MEM_ALLOC_HOST_PTR, histogram_size};
 
-  float *x = (float *)queue.enqueueMapBuffer(d_x, CL_TRUE, CL_MAP_WRITE, 0,
-                                             buffer_size);
-  float *y = (float *)queue.enqueueMapBuffer(d_y, CL_TRUE, CL_MAP_WRITE, 0,
-                                             buffer_size);
-  float *z = (float *)queue.enqueueMapBuffer(d_z, CL_TRUE, CL_MAP_WRITE, 0,
-                                             buffer_size);
+  float *data = (float *)queue.enqueueMapBuffer(d_data, CL_TRUE, CL_MAP_WRITE, 0,
+						data_size);
+  float *histogram = (float *)queue.enqueueMapBuffer(d_histogram, CL_TRUE, CL_MAP_WRITE, 0,
+						     histogram_size);
 
+  float range = (float)RAND_MAX;
   for (size_t idx = 0; idx < num_elements; idx++) {
-    x[idx] = 1.0f;
-    y[idx] = 2.0f;
-    z[idx] = 0.0f;
+    data[idx] = rand();
+  }
+  for (size_t idx = 0; idx < NUM_BUCKETS; idx++) {
+    histogram[idx] = 0;
   }
 
-  queue.enqueueUnmapMemObject(d_x, x);
-  queue.enqueueUnmapMemObject(d_y, y);
-  queue.enqueueUnmapMemObject(d_z, z);
+  queue.enqueueUnmapMemObject(d_data, data);
+  queue.enqueueUnmapMemObject(d_histogram, histogram);
 
-  kernel.setArg(0, 2.0f);
-  kernel.setArg(1, d_x);
-  kernel.setArg(2, d_y);
-  kernel.setArg(3, d_z);
+  kernel.setArg(0, num_elements);
+  kernel.setArg(1, range);
+  kernel.setArg(2, d_data);
+  kernel.setArg(3, d_histogram);
 
-  queue.enqueueNDRangeKernel(kernel, cl::NullRange, cl::NDRange{num_elements});
+  size_t elts_per_thread = 16;
+  queue.enqueueNDRangeKernel(kernel, cl::NullRange, cl::NDRange{num_elements/elts_per_thread});
 
-  z = (float *)queue.enqueueMapBuffer(d_z, CL_TRUE, CL_MAP_READ, 0,
-                                      buffer_size);
+  histogram = (float *)queue.enqueueMapBuffer(d_histogram, CL_TRUE, CL_MAP_READ, 0,
+					      histogram_size);
 
-  float error = 0.0;
-  for (size_t idx = 0; idx < num_elements; idx++) {
-    error = fmax(error, fabs(z[idx] - 4.0f));
+  size_t total = 0;
+  for (size_t idx = 0; idx < NUM_BUCKETS; idx++) {
+    total += histogram[idx];
+    printf("histogram[%lu] = %u\n", idx, histogram[idx]);
   }
-  printf("error: %e\n", error);
+  printf("\ntotal = %lu (%s)\n", total,
+         total == num_elements ? "PASS" : "FAIL");
 
-  queue.enqueueUnmapMemObject(d_z, z);
+  queue.enqueueUnmapMemObject(d_histogram, histogram);
 
   return 0;
 }
