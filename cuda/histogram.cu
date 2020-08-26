@@ -38,7 +38,7 @@ int main() {
   cudaMalloc(&d_data, data_size);
   cudaMalloc(&d_histogram, histogram_size);
 
-  float range = RAND_MAX;
+  float range = (float)RAND_MAX;
   for (size_t idx = 0; idx < num_elements; idx++) {
     data[idx] = rand();
   }
