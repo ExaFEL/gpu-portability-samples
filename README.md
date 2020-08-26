@@ -1,9 +1,11 @@
 # GPU Performance Portability Samples
 
-The samples include the following programming systems:
+The samples have been tested on the following systems:
 
-  * CUDA (tested locally)
-  * HIP (tested on Tulip)
-  * Kokkos (tested locally)
-  * OpenCL (tested on Iris)
-  * OpenMP (tested on Iris)
+|        | Iris | Tulip | local |
+|--------|------|-------|-------|
+| CUDA   |      |       | yes   |
+| HIP    |      | yes   |       |
+| Kokkos |      |       | yes   |
+| OpenCL | yes  |       |       |
+| OpenMP | yes  |       |       |
