@@ -8,13 +8,11 @@ CXXFLAGS ?= -Wall -std=c++11
 LDFLAGS ?= -lOpenCL
 
 BIN := saxpy
-OBJ := main.o
-OPENCL_OBJ := kernel64.spv
 
 .PHONY: all
 all:  $(BIN)
 
-$(BIN): $(OBJ) $(OPENCL_OBJ)
+$(BIN): $(BIN:%=%_main.o) $(BIN:%=%_kernel32.spv) $(BIN:%=%_kernel64.spv)
 	$(CXX) -o $@ $(NVCCFLAGS) $< $(LDFLAGS)
 
 %.o:%.cc
