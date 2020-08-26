@@ -6,8 +6,6 @@
 
 __global__ void compute_histogram(const size_t num_elements, const float range,
                                   const float *data, unsigned *histogram) {
-  int idx = (blockIdx.x * blockDim.x) + threadIdx.x;
-
   int t = threadIdx.x;
   int nt = blockDim.x;
 
@@ -16,7 +14,8 @@ __global__ void compute_histogram(const size_t num_elements, const float range,
 
   __syncthreads();
 
-  if (idx <= num_elements) {
+  for (int idx = (blockIdx.x * blockDim.x) + threadIdx.x; idx < num_elements;
+       idx += gridDim.x * blockDim.x) {
     size_t bucket = floor(data[idx] / range * (NUM_BUCKETS - 1));
     atomicAdd(&local_histogram[bucket], 1);
   }
@@ -51,16 +50,24 @@ int main() {
   hipMemcpy(d_data, data, data_size, hipMemcpyHostToDevice);
   hipMemcpy(d_histogram, histogram, histogram_size, hipMemcpyHostToDevice);
 
-  compute_histogram<<<(num_elements + 255) / 256, 256>>>(num_elements, range,
-                                                         d_data, d_histogram);
+  size_t elts_per_thread = 16;
+  size_t block_size = 256;
+  size_t blocks = (num_elements + elts_per_thread * block_size - 1) /
+                  (elts_per_thread * block_size);
+  compute_histogram<<<blocks, block_size>>>(num_elements, range, d_data,
+                                            d_histogram);
 
   hipMemcpy(histogram, d_histogram, histogram_size, hipMemcpyDeviceToHost);
 
   hipDeviceSynchronize();
 
+  size_t total = 0;
   for (size_t idx = 0; idx < NUM_BUCKETS; idx++) {
+    total += histogram[idx];
     printf("histogram[%lu] = %u\n", idx, histogram[idx]);
   }
+  printf("\ntotal = %lu (%s)\n", total,
+         total == num_elements ? "PASS" : "FAIL");
 
   hipFree(d_data);
   hipFree(d_histogram);
