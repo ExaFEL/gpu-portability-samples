@@ -3,7 +3,7 @@ NVCC ?= nvcc
 NVCCFLAGS ?=
 LDFLAGS ?=
 
-BIN := saxpy
+BIN := saxpy histogram
 
 .PHONY: all
 all:  $(BIN)
