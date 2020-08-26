@@ -4,7 +4,7 @@ HIPCCFLAGS ?=
 HIPCCFLAGS += -Wall
 LDFLAGS ?=
 
-BIN := saxpy
+BIN := saxpy histogram
 
 .PHONY: all
 all:  $(BIN)
