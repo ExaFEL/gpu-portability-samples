@@ -1,6 +1,7 @@
 HIPCC ?= hipcc
 
-HIPCCFLAGS ?= -Wall
+HIPCCFLAGS ?=
+HIPCCFLAGS += -Wall
 LDFLAGS ?=
 
 BIN := saxpy

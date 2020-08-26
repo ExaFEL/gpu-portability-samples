@@ -1,3 +1,3 @@
-# FIXME: do we need this?
-# module load PrgEnv-cray
 module load rocm
+
+export HIPCCFLAGS=--amdgpu-target=gfx908
