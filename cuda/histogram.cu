@@ -12,7 +12,8 @@ __global__ void compute_histogram(const size_t num_elements, const float range,
 
   __syncthreads();
 
-  for(int idx = (blockIdx.x * blockDim.x) + threadIdx.x; idx < num_elements; idx += gridDim.x * blockDim.x) {
+  for (int idx = (blockIdx.x * blockDim.x) + threadIdx.x; idx < num_elements;
+       idx += gridDim.x * blockDim.x) {
     size_t bucket = floor(data[idx] / range * (NUM_BUCKETS - 1));
     atomicAdd(&local_histogram[bucket], 1);
   }
@@ -49,9 +50,10 @@ int main() {
 
   size_t elts_per_thread = 16;
   size_t block_size = 256;
-  size_t blocks = (num_elements + elts_per_thread * block_size - 1) / (elts_per_thread * block_size);
-  compute_histogram<<<blocks, block_size>>>(num_elements, range,
-                                                         d_data, d_histogram);
+  size_t blocks = (num_elements + elts_per_thread * block_size - 1) /
+                  (elts_per_thread * block_size);
+  compute_histogram<<<blocks, block_size>>>(num_elements, range, d_data,
+                                            d_histogram);
 
   cudaMemcpy(histogram, d_histogram, histogram_size, cudaMemcpyDeviceToHost);
 
@@ -62,7 +64,8 @@ int main() {
     total += histogram[idx];
     printf("histogram[%lu] = %u\n", idx, histogram[idx]);
   }
-  printf("\ntotal = %lu (%s)\n", total, total == num_elements ? "PASS" : "FAIL");
+  printf("\ntotal = %lu (%s)\n", total,
+         total == num_elements ? "PASS" : "FAIL");
 
   cudaFree(d_data);
   cudaFree(d_histogram);
