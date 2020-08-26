@@ -10,8 +10,7 @@ __global__ void compute_histogram(const size_t num_elements, const float range,
   int nt = blockDim.x;
 
   __shared__ unsigned local_histogram[NUM_BUCKETS];
-  for (int i = t; i < NUM_BUCKETS; i += nt)
-    local_histogram[i] = 0;
+  for (int i = t; i < NUM_BUCKETS; i += nt) local_histogram[i] = 0;
 
   __syncthreads();
 
@@ -50,7 +49,8 @@ int main() {
   cudaMemcpy(d_data, data, data_size, cudaMemcpyHostToDevice);
   cudaMemcpy(d_histogram, histogram, histogram_size, cudaMemcpyHostToDevice);
 
-  compute_histogram<<<(num_elements + 255) / 256, 256>>>(num_elements, range, d_data, d_histogram);
+  compute_histogram<<<(num_elements + 255) / 256, 256>>>(num_elements, range,
+                                                         d_data, d_histogram);
 
   cudaMemcpy(histogram, d_histogram, histogram_size, cudaMemcpyDeviceToHost);
 
