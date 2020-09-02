@@ -8,10 +8,8 @@ The samples have been tested on the following systems:
 |--------|------|--------|-------|
 | CUDA   |      |        | yes   |
 | HIP    |      | yes    |       |
-| Kokkos | \*   |        | yes   |
+| Kokkos | yes  |        | yes   |
 | OpenCL | yes  | \*\*   |       |
 | OpenMP | yes  | yes    |       |
-
-\* Currently in a branch, requires non-portable workarounds for Iris.
 
 \*\* Broken on Tulip, currently investigating.
