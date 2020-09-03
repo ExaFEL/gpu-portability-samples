@@ -33,6 +33,6 @@ make
 To run:
 
 ```
-salloc -N 1 -p amdMI100 --time 00:10:00
+salloc -N 1 -p amdMI100 --time 00:30:00
 srun ./saxpy
 ```
