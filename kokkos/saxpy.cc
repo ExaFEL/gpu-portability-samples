@@ -7,9 +7,13 @@ int main(int argc, char **argv) {
   size_t buffer_size = num_elements * sizeof(float);
 
   {
-    Kokkos::View<float *> x("x", num_elements);
-    Kokkos::View<float *> y("y", num_elements);
-    Kokkos::View<float *> z("z", num_elements);
+    Kokkos::View<float *> d_x("x", num_elements);
+    Kokkos::View<float *> d_y("y", num_elements);
+    Kokkos::View<float *> d_z("z", num_elements);
+
+    Kokkos::View<float *>::HostMirror x = Kokkos::create_mirror(d_x);
+    Kokkos::View<float *>::HostMirror y = Kokkos::create_mirror(d_y);
+    Kokkos::View<float *>::HostMirror z = Kokkos::create_mirror(d_z);
 
     const float alpha = 2.0f;
 
@@ -19,9 +23,15 @@ int main(int argc, char **argv) {
       z(idx) = 0.0f;
     }
 
+    Kokkos::deep_copy(d_x, x);
+    Kokkos::deep_copy(d_y, y);
+    Kokkos::deep_copy(d_z, z);
+
     Kokkos::parallel_for(
         "saxpy", num_elements,
-        KOKKOS_LAMBDA(size_t idx) { z(idx) += alpha * x(idx) + y(idx); });
+        KOKKOS_LAMBDA(size_t idx) { d_z(idx) += alpha * d_x(idx) + d_y(idx); });
+
+    Kokkos::deep_copy(z, d_z);
 
     float error = 0.0;
     for (size_t idx = 0; idx < num_elements; idx++) {

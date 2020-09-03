@@ -7,8 +7,8 @@ cd kokkos
 mkdir build
 cd build
 cmake -DKokkos_ARCH_VEGA906=on \
-    -DKokkos_ENABLE_HIP=on -DKokkos_ENABLE_SERIAL=on \
-    -DKokkos_ENABLE_TESTS=off \
+    -DKokkos_ENABLE_HIP=on \
+    -DKokkos_ENABLE_SERIAL=on \
     -DKokkos_ENABLE_HIP_RELOCATABLE_DEVICE_CODE=off \
     -DCMAKE_INSTALL_PREFIX="$PWD/../install" \
     ..
