@@ -8,7 +8,7 @@ The samples have been tested on the following systems:
 |--------|------|--------|-------|
 | CUDA   |      |        | yes   |
 | HIP    |      | yes    |       |
-| Kokkos | yes  |        | yes   |
+| Kokkos | yes  | yes    |       |
 | OpenCL | yes  | \*\*   |       |
 | OpenMP | yes  | yes    |       |
 
