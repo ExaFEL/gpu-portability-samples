@@ -34,6 +34,13 @@
 
 #define NUM_BUCKETS 128
 
+#define CHECK_ERROR(err) do {			\
+    if (err != CL_SUCCESS) {			\
+      printf("error %d\n", err);		\
+      assert(false);				\
+    }						\
+  } while(false)				\
+
 static std::vector<cl_uchar> read_file(const std::string &filename) {
   std::ifstream is(filename, std::ios::binary);
   std::vector<cl_uchar> ret;
@@ -51,11 +58,6 @@ static std::vector<cl_uchar> read_file(const std::string &filename) {
              std::istreambuf_iterator<char>());
 
   return ret;
-}
-
-static cl::Program createProgramWithIL(const cl::Context &context,
-                                       const std::vector<cl_uchar> &il) {
-  return cl::Program{clCreateProgramWithIL(context(), il.data(), il.size(), nullptr)};
 }
 
 void parse_arguments(int argc, char **argv, int &platform_index,
@@ -111,14 +113,18 @@ int main(int argc, char **argv) {
   printf("CL_DEVICE_ADDRESS_BITS is %d for this device.\n",
          devices[device_index].getInfo<CL_DEVICE_ADDRESS_BITS>());
 
-  cl::Context context{devices[device_index]};
-  cl::CommandQueue queue = cl::CommandQueue{context, devices[device_index]};
+  cl_int err = CL_SUCCESS;
+  cl::Context context(devices[device_index]);
+  cl::CommandQueue queue(context, devices[device_index], err);
+  CHECK_ERROR(err);
 
   const char *filename =
       (sizeof(void *) == 8) ? "histogram_kernel64.spv" : "histogram_kernel32.spv";
   std::vector<cl_uchar> spirv = read_file(filename);
 
-  cl::Program program = createProgramWithIL(context, spirv);
+  cl::Program program(clCreateProgramWithIL(context(), spirv.data(), spirv.size(), &err));
+  CHECK_ERROR(err);
+
   const char *build_options = NULL;
   program.build(build_options);
 
@@ -129,7 +135,8 @@ int main(int argc, char **argv) {
   }
 
   const char *kernel_name = "histogram";
-  cl::Kernel kernel = cl::Kernel{program, kernel_name};
+  cl::Kernel kernel = cl::Kernel(program, kernel_name, &err);
+  CHECK_ERROR(err);
 
   size_t num_elements = 1 << 20;
   size_t data_size = num_elements * sizeof(cl_float);

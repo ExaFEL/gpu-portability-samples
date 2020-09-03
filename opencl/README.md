@@ -20,6 +20,8 @@ source iris_env.sh
 
 ## Tulip
 
+Note: the Tulip build currently requires a build of llvm-spirv, and is thus not recommended.
+
 To build:
 
 ```
