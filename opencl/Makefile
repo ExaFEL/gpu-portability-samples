@@ -2,10 +2,14 @@ CC := clang
 CXX := clang++
 LLVM_SPIRV ?= llvm-spirv
 
-OPENCL64_FLAGS ?= -Wall -cl-std=CL1.2 -target spir64 -emit-llvm -Xclang -finclude-default-header -flto
-OPENCL32_FLAGS ?= -Wall -cl-std=CL1.2 -target spir   -emit-llvm -Xclang -finclude-default-header -flto
-CXXFLAGS ?= -Wall -std=c++11
-LDFLAGS ?= -lOpenCL
+OPENCL64_FLAGS ?=
+OPENCL64_FLAGS += -Wall -cl-std=CL1.2 -target spir64 -emit-llvm -Xclang -finclude-default-header -flto
+OPENCL32_FLAGS ?=
+OPENCL32_FLAGS += -Wall -cl-std=CL1.2 -target spir   -emit-llvm -Xclang -finclude-default-header -flto
+CXXFLAGS ?=
+CXXFLAGS += -Wall -std=c++11
+LDFLAGS ?=
+LDFLAGS += -lOpenCL
 
 BIN := saxpy histogram
 
