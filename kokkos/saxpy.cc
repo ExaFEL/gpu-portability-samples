@@ -11,9 +11,9 @@ int main(int argc, char **argv) {
     Kokkos::View<float *> d_y("y", num_elements);
     Kokkos::View<float *> d_z("z", num_elements);
 
-    Kokkos::View<float *>::HostMirror x = Kokkos::create_mirror(d_x);
-    Kokkos::View<float *>::HostMirror y = Kokkos::create_mirror(d_y);
-    Kokkos::View<float *>::HostMirror z = Kokkos::create_mirror(d_z);
+    Kokkos::View<float *>::HostMirror x = Kokkos::create_mirror_view(d_x);
+    Kokkos::View<float *>::HostMirror y = Kokkos::create_mirror_view(d_y);
+    Kokkos::View<float *>::HostMirror z = Kokkos::create_mirror_view(d_z);
 
     const float alpha = 2.0f;
 
