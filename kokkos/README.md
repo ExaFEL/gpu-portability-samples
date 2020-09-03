@@ -5,7 +5,7 @@ These instructions are intended for Iris or Tulip.
 To build:
 
 ```
-cd gpu-portability-sample/opencl
+cd gpu-portability-sample/kokkos
 source iris_env.sh
 ./build.sh
 ```
@@ -23,7 +23,7 @@ source iris_env.sh
 To build:
 
 ```
-cd gpu-portability-sample/opencl
+cd gpu-portability-sample/kokkos
 source tulip_env.sh
 ./get_kokkos.sh
 ./build.sh
