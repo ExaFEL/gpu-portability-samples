@@ -5,7 +5,7 @@ kernel void histogram(const ulong num_elements, float range,
   uint t = get_local_id(0);
   uint nt = get_local_size(0);
 
-  __local unsigned local_histogram[NUM_BUCKETS];
+  local unsigned local_histogram[NUM_BUCKETS];
   for (uint i = t; i < NUM_BUCKETS; i += nt) local_histogram[i] = 0;
 
   barrier(CLK_LOCAL_MEM_FENCE);

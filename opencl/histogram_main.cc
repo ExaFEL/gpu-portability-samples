@@ -34,12 +34,12 @@
 
 #define NUM_BUCKETS 128
 
-#define CHECK_ERROR(err) do {			\
-    if (err != CL_SUCCESS) {			\
-      printf("error %d\n", err);		\
-      assert(false);				\
-    }						\
-  } while(false)				\
+#define CHECK_ERROR(err) do {                   \
+    if (err != CL_SUCCESS) {                    \
+      printf("error %d\n", err);                \
+      assert(false);                            \
+    }                                           \
+  } while(false)                                \
 
 static std::vector<cl_uchar> read_file(const std::string &filename) {
   std::ifstream is(filename, std::ios::binary);
@@ -145,10 +145,10 @@ int main(int argc, char **argv) {
   cl::Buffer d_data = cl::Buffer{context, CL_MEM_ALLOC_HOST_PTR, data_size};
   cl::Buffer d_histogram = cl::Buffer{context, CL_MEM_ALLOC_HOST_PTR, histogram_size};
 
-  float *data = (float *)queue.enqueueMapBuffer(d_data, CL_TRUE, CL_MAP_WRITE, 0,
-						data_size);
-  float *histogram = (float *)queue.enqueueMapBuffer(d_histogram, CL_TRUE, CL_MAP_WRITE, 0,
-						     histogram_size);
+  cl_float *data = (cl_float *)queue.enqueueMapBuffer(d_data, CL_TRUE, CL_MAP_WRITE, 0,
+                                                      data_size);
+  cl_uint *histogram = (cl_uint *)queue.enqueueMapBuffer(d_histogram, CL_TRUE, CL_MAP_WRITE, 0,
+                                                         histogram_size);
 
   float range = (float)RAND_MAX;
   for (size_t idx = 0; idx < num_elements; idx++) {
@@ -169,8 +169,8 @@ int main(int argc, char **argv) {
   size_t elts_per_thread = 16;
   queue.enqueueNDRangeKernel(kernel, cl::NullRange, cl::NDRange{num_elements/elts_per_thread});
 
-  histogram = (float *)queue.enqueueMapBuffer(d_histogram, CL_TRUE, CL_MAP_READ, 0,
-					      histogram_size);
+  histogram = (cl_uint *)queue.enqueueMapBuffer(d_histogram, CL_TRUE, CL_MAP_READ, 0,
+                                                histogram_size);
 
   size_t total = 0;
   for (size_t idx = 0; idx < NUM_BUCKETS; idx++) {
