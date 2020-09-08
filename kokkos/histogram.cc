@@ -57,7 +57,7 @@ int main(int argc, char **argv) {
           mbr.team_barrier();
 
           for (int i = t; i < NUM_BUCKETS; i += nt)
-            Kokkos::atomic_add(&histogram(i), local_histogram(i));
+            Kokkos::atomic_add(&d_histogram(i), local_histogram(i));
         });
 
     Kokkos::deep_copy(histogram, d_histogram);
