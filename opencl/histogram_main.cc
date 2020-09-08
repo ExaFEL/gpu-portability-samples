@@ -34,12 +34,13 @@
 
 #define NUM_BUCKETS 128
 
-#define CHECK_ERROR(err) do {                   \
-    if (err != CL_SUCCESS) {                    \
-      printf("error %d\n", err);                \
-      assert(false);                            \
-    }                                           \
-  } while(false)                                \
+#define CHECK_ERROR(err)         \
+  do {                           \
+    if (err != CL_SUCCESS) {     \
+      printf("error %d\n", err); \
+      assert(false);             \
+    }                            \
+  } while (false)
 
 static std::vector<cl_uchar> read_file(const std::string &filename) {
   std::ifstream is(filename, std::ios::binary);
@@ -119,10 +120,11 @@ int main(int argc, char **argv) {
   CHECK_ERROR(err);
 
 #if !defined(USE_SPIRV) || USE_SPIRV == 1
-  const char *filename =
-      (sizeof(void *) == 8) ? "histogram_kernel64.spv" : "histogram_kernel32.spv";
+  const char *filename = (sizeof(void *) == 8) ? "histogram_kernel64.spv"
+                                               : "histogram_kernel32.spv";
   std::vector<cl_uchar> spirv = read_file(filename);
-  cl::Program program(clCreateProgramWithIL(context(), spirv.data(), spirv.size(), &err));
+  cl::Program program(
+      clCreateProgramWithIL(context(), spirv.data(), spirv.size(), &err));
 #else
   const char *filename = "histogram_kernel.cl";
   std::vector<cl_uchar> src = read_file(filename);
@@ -148,13 +150,13 @@ int main(int argc, char **argv) {
   size_t data_size = num_elements * sizeof(cl_float);
   size_t histogram_size = NUM_BUCKETS * sizeof(cl_uint);
 
-  cl::Buffer d_data = cl::Buffer{context, CL_MEM_ALLOC_HOST_PTR, data_size};
-  cl::Buffer d_histogram = cl::Buffer{context, CL_MEM_ALLOC_HOST_PTR, histogram_size};
+  cl::Buffer d_data(context, CL_MEM_ALLOC_HOST_PTR, data_size);
+  cl::Buffer d_histogram(context, CL_MEM_ALLOC_HOST_PTR, histogram_size);
 
-  cl_float *data = (cl_float *)queue.enqueueMapBuffer(d_data, CL_TRUE, CL_MAP_WRITE, 0,
-                                                      data_size);
-  cl_uint *histogram = (cl_uint *)queue.enqueueMapBuffer(d_histogram, CL_TRUE, CL_MAP_WRITE, 0,
-                                                         histogram_size);
+  cl_float *data = (cl_float *)queue.enqueueMapBuffer(
+      d_data, CL_TRUE, CL_MAP_WRITE, 0, data_size);
+  cl_uint *histogram = (cl_uint *)queue.enqueueMapBuffer(
+      d_histogram, CL_TRUE, CL_MAP_WRITE, 0, histogram_size);
 
   float range = (float)RAND_MAX;
   for (size_t idx = 0; idx < num_elements; idx++) {
@@ -173,10 +175,11 @@ int main(int argc, char **argv) {
   kernel.setArg(3, d_histogram);
 
   size_t elts_per_thread = 16;
-  queue.enqueueNDRangeKernel(kernel, cl::NullRange, cl::NDRange{num_elements/elts_per_thread});
+  queue.enqueueNDRangeKernel(kernel, cl::NullRange,
+                             cl::NDRange(num_elements / elts_per_thread));
 
-  histogram = (cl_uint *)queue.enqueueMapBuffer(d_histogram, CL_TRUE, CL_MAP_READ, 0,
-                                                histogram_size);
+  histogram = (cl_uint *)queue.enqueueMapBuffer(d_histogram, CL_TRUE,
+                                                CL_MAP_READ, 0, histogram_size);
 
   size_t total = 0;
   for (size_t idx = 0; idx < NUM_BUCKETS; idx++) {

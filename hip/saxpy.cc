@@ -1,6 +1,5 @@
-#include <stdio.h>
-
 #include <hip/hip_runtime.h>
+#include <stdio.h>
 
 __global__ void saxpy(const size_t num_elements, const float alpha,
                       const float *x, const float *y, float *z) {

@@ -32,12 +32,13 @@
 #include <cassert>
 #include <cmath>
 
-#define CHECK_ERROR(err) do {			\
-    if (err != CL_SUCCESS) {			\
-      printf("error %d\n", err);		\
-      assert(false);				\
-    }						\
-  } while(false)				\
+#define CHECK_ERROR(err)         \
+  do {                           \
+    if (err != CL_SUCCESS) {     \
+      printf("error %d\n", err); \
+      assert(false);             \
+    }                            \
+  } while (false)
 
 static std::vector<cl_uchar> read_file(const std::string &filename) {
   std::ifstream is(filename, std::ios::binary);
@@ -120,7 +121,8 @@ int main(int argc, char **argv) {
   const char *filename =
       (sizeof(void *) == 8) ? "saxpy_kernel64.spv" : "saxpy_kernel32.spv";
   std::vector<cl_uchar> spirv = read_file(filename);
-  cl::Program program(clCreateProgramWithIL(context(), spirv.data(), spirv.size(), &err));
+  cl::Program program(
+      clCreateProgramWithIL(context(), spirv.data(), spirv.size(), &err));
 #else
   const char *filename = "saxpy_kernel.cl";
   std::vector<cl_uchar> src = read_file(filename);
@@ -145,9 +147,9 @@ int main(int argc, char **argv) {
   size_t num_elements = 1 << 20;
   size_t buffer_size = num_elements * sizeof(cl_float);
 
-  cl::Buffer d_x = cl::Buffer{context, CL_MEM_ALLOC_HOST_PTR, buffer_size};
-  cl::Buffer d_y = cl::Buffer{context, CL_MEM_ALLOC_HOST_PTR, buffer_size};
-  cl::Buffer d_z = cl::Buffer{context, CL_MEM_ALLOC_HOST_PTR, buffer_size};
+  cl::Buffer d_x(context, CL_MEM_ALLOC_HOST_PTR, buffer_size);
+  cl::Buffer d_y(context, CL_MEM_ALLOC_HOST_PTR, buffer_size);
+  cl::Buffer d_z(context, CL_MEM_ALLOC_HOST_PTR, buffer_size);
 
   float *x = (float *)queue.enqueueMapBuffer(d_x, CL_TRUE, CL_MAP_WRITE, 0,
                                              buffer_size);
@@ -171,7 +173,7 @@ int main(int argc, char **argv) {
   kernel.setArg(2, d_y);
   kernel.setArg(3, d_z);
 
-  queue.enqueueNDRangeKernel(kernel, cl::NullRange, cl::NDRange{num_elements});
+  queue.enqueueNDRangeKernel(kernel, cl::NullRange, cl::NDRange(num_elements));
 
   z = (float *)queue.enqueueMapBuffer(d_z, CL_TRUE, CL_MAP_READ, 0,
                                       buffer_size);
