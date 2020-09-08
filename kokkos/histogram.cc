@@ -50,7 +50,7 @@ int main(int argc, char **argv) {
 
           for (int idx = mbr.league_rank() * mbr.team_size() + mbr.team_rank();
                idx < num_elements; idx += mbr.league_size() * mbr.team_size()) {
-            size_t bucket = floor(data(idx) / range * (NUM_BUCKETS - 1));
+            size_t bucket = floor(d_data(idx) / range * (NUM_BUCKETS - 1));
             Kokkos::atomic_increment(&local_histogram(bucket));
           }
 
