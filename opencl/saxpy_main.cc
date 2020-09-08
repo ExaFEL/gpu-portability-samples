@@ -174,7 +174,7 @@ int main(int argc, char **argv) {
   for (size_t idx = 0; idx < num_elements; idx++) {
     error = fmax(error, fabs(z[idx] - 4.0f));
   }
-  printf("error: %e\n", error);
+  printf("error: %e (%s)\n", error, error == 0.0 ? "PASS" : "FAIL");
 
   queue.enqueueUnmapMemObject(d_z, z);
 
