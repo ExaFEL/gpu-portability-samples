@@ -26,18 +26,20 @@ int main(int argc, char **argv) {
     Kokkos::deep_copy(d_histogram, histogram);
 
     typedef Kokkos::DefaultExecutionSpace::scratch_memory_space ScratchSpace;
-    Kokkos::View<unsigned *, ScratchSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>> local_histogram("local_histogram", NUM_BUCKETS);
+    typedef Kokkos::View<unsigned *, ScratchSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>> ScratchView;
 
     size_t elts_per_thread = 16;
 
     typedef Kokkos::TeamPolicy<>::member_type member_type;
     Kokkos::TeamPolicy<> policy(num_elements / elts_per_thread, Kokkos::AUTO());
-    policy.set_scratch_size(0, Kokkos::PerTeam(local_histogram.shmem_size(policy.team_size())));
+    policy.set_scratch_size(0, Kokkos::PerTeam(ScratchView::shmem_size(NUM_BUCKETS)));
     Kokkos::parallel_for(
         "saxpy", policy,
         KOKKOS_LAMBDA(member_type mbr) {
+          ScratchView local_histogram(mbr.team_scratch(0), NUM_BUCKETS);
+
 	  int t = mbr.team_rank();
-	  int nt = mbr.league_rank();
+	  int nt = mbr.team_size();
 
 	  for (int i = t; i < NUM_BUCKETS; i += nt) local_histogram(i) = 0;
 
