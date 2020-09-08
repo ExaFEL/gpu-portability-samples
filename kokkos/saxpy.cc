@@ -4,7 +4,6 @@ int main(int argc, char **argv) {
   Kokkos::initialize(argc, argv);
 
   size_t num_elements = 1 << 20;
-  size_t buffer_size = num_elements * sizeof(float);
 
   {
     Kokkos::View<float *> d_x("x", num_elements);

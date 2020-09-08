@@ -2,8 +2,11 @@
 
 set -e
 
-mkdir -p build
-pushd build
-cmake ..
-make
-popd
+if [[ ! -d build ]]; then
+    mkdir build
+    pushd build
+    cmake ..
+    popd
+fi
+
+make -C build
