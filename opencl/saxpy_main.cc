@@ -51,7 +51,7 @@ static std::vector<cl_uchar> read_file(const std::string &filename) {
   filesize = (size_t)is.tellg();
   is.seekg(0, std::ios::beg);
 
-  ret.resize(filesize);
+  ret.reserve(filesize);
   ret.insert(ret.begin(), std::istreambuf_iterator<char>(is),
              std::istreambuf_iterator<char>());
 
@@ -116,11 +116,17 @@ int main(int argc, char **argv) {
   cl::CommandQueue queue(context, devices[device_index], err);
   CHECK_ERROR(err);
 
+#if !defined(USE_SPIRV) || USE_SPIRV == 1
   const char *filename =
       (sizeof(void *) == 8) ? "saxpy_kernel64.spv" : "saxpy_kernel32.spv";
   std::vector<cl_uchar> spirv = read_file(filename);
-
   cl::Program program(clCreateProgramWithIL(context(), spirv.data(), spirv.size(), &err));
+#else
+  const char *filename = "saxpy_kernel.cl";
+  std::vector<cl_uchar> src = read_file(filename);
+  std::string srcs((const char *)src.data(), src.size());
+  cl::Program program(context, srcs, false, &err);
+#endif
   CHECK_ERROR(err);
 
   const char *build_options = NULL;
