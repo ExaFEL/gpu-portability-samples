@@ -26,7 +26,10 @@ int main() {
 
   // This is not strictly necessary, but avoids allocating memory
   // later when we perform the target map.
-#pragma omp target enter data map(alloc: x[:num_elements], y[:num_elements], z[:num_elements])
+#pragma omp target enter data map(alloc                 \
+                                  : x[:num_elements], y \
+                                  [:num_elements], z    \
+                                  [:num_elements])
 
 #pragma omp target map(x[:num_elements], y[:num_elements], z[:num_elements])
   {
@@ -36,7 +39,10 @@ int main() {
     }
   }
 
-#pragma omp target exit data map(release: x[:num_elements], y[:num_elements], z[:num_elements])
+#pragma omp target exit data map(release               \
+                                 : x[:num_elements], y \
+                                 [:num_elements], z    \
+                                 [:num_elements])
 
   float error = 0.0;
   for (size_t idx = 0; idx < num_elements; idx++) {
