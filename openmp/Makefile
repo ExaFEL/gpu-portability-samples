@@ -1,7 +1,7 @@
 CXXFLAGS ?= -Wall -std=c++11 -fopenmp
 LDFLAGS ?= -fopenmp
 
-BIN := saxpy
+BIN := saxpy histogram
 
 .PHONY: all
 all:  $(BIN)
