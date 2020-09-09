@@ -25,13 +25,13 @@ int main() {
     z[idx] = 0.0f;
   }
 
-  cudaMemcpy(d_x, x, buffer_size, cudaMemcpyHostToDevice);
-  cudaMemcpy(d_y, y, buffer_size, cudaMemcpyHostToDevice);
-  cudaMemcpy(d_z, z, buffer_size, cudaMemcpyHostToDevice);
+  cudaMemcpyAsync(d_x, x, buffer_size, cudaMemcpyHostToDevice);
+  cudaMemcpyAsync(d_y, y, buffer_size, cudaMemcpyHostToDevice);
+  cudaMemcpyAsync(d_z, z, buffer_size, cudaMemcpyHostToDevice);
 
   saxpy<<<(num_elements + 255) / 256, 256>>>(num_elements, 2.0f, d_x, d_y, d_z);
 
-  cudaMemcpy(z, d_z, buffer_size, cudaMemcpyDeviceToHost);
+  cudaMemcpyAsync(z, d_z, buffer_size, cudaMemcpyDeviceToHost);
 
   cudaDeviceSynchronize();
 

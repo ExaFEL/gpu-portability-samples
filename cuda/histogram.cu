@@ -45,8 +45,8 @@ int main() {
     histogram[idx] = 0;
   }
 
-  cudaMemcpy(d_data, data, data_size, cudaMemcpyHostToDevice);
-  cudaMemcpy(d_histogram, histogram, histogram_size, cudaMemcpyHostToDevice);
+  cudaMemcpyAsync(d_data, data, data_size, cudaMemcpyHostToDevice);
+  cudaMemcpyAsync(d_histogram, histogram, histogram_size, cudaMemcpyHostToDevice);
 
   size_t elts_per_thread = 16;
   size_t block_size = 256;
@@ -55,7 +55,7 @@ int main() {
   compute_histogram<<<blocks, block_size>>>(num_elements, range, d_data,
                                             d_histogram);
 
-  cudaMemcpy(histogram, d_histogram, histogram_size, cudaMemcpyDeviceToHost);
+  cudaMemcpyAsync(histogram, d_histogram, histogram_size, cudaMemcpyDeviceToHost);
 
   cudaDeviceSynchronize();
 

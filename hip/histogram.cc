@@ -46,8 +46,8 @@ int main() {
     histogram[idx] = 0;
   }
 
-  hipMemcpy(d_data, data, data_size, hipMemcpyHostToDevice);
-  hipMemcpy(d_histogram, histogram, histogram_size, hipMemcpyHostToDevice);
+  hipMemcpyAsync(d_data, data, data_size, hipMemcpyHostToDevice);
+  hipMemcpyAsync(d_histogram, histogram, histogram_size, hipMemcpyHostToDevice);
 
   size_t elts_per_thread = 16;
   size_t block_size = 256;
@@ -56,7 +56,7 @@ int main() {
   compute_histogram<<<blocks, block_size>>>(num_elements, range, d_data,
                                             d_histogram);
 
-  hipMemcpy(histogram, d_histogram, histogram_size, hipMemcpyDeviceToHost);
+  hipMemcpyAsync(histogram, d_histogram, histogram_size, hipMemcpyDeviceToHost);
 
   hipDeviceSynchronize();
 

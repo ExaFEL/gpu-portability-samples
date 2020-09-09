@@ -26,13 +26,13 @@ int main() {
     z[idx] = 0.0f;
   }
 
-  hipMemcpy(d_x, x, buffer_size, hipMemcpyHostToDevice);
-  hipMemcpy(d_y, y, buffer_size, hipMemcpyHostToDevice);
-  hipMemcpy(d_z, z, buffer_size, hipMemcpyHostToDevice);
+  hipMemcpyAsync(d_x, x, buffer_size, hipMemcpyHostToDevice);
+  hipMemcpyAsync(d_y, y, buffer_size, hipMemcpyHostToDevice);
+  hipMemcpyAsync(d_z, z, buffer_size, hipMemcpyHostToDevice);
 
   saxpy<<<(num_elements + 255) / 256, 256>>>(num_elements, 2.0f, d_x, d_y, d_z);
 
-  hipMemcpy(z, d_z, buffer_size, hipMemcpyDeviceToHost);
+  hipMemcpyAsync(z, d_z, buffer_size, hipMemcpyDeviceToHost);
 
   hipDeviceSynchronize();
 
