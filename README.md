@@ -20,6 +20,8 @@ The samples have been tested on the following systems:
 | HIP    |      | yes    |       |
 | Kokkos | \*   | yes    |       |
 | OpenCL | yes  | yes    |       |
-| OpenMP |      |        |       |
+| OpenMP | \*\* | \*\*   |       |
 
-\* Hits a compiler error, waiting for updated software release from Intel.
+\* Hits a compiler bug, waiting for updated software release from Intel.
+
+\*\* Hits a compiler error, currently debugging.
