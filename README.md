@@ -20,8 +20,8 @@ The samples have been tested on the following systems:
 | HIP    |      | yes    |       |
 | Kokkos | \*   | yes    |       |
 | OpenCL | yes  | yes    |       |
-| OpenMP | \*\* | \*\*   |       |
+| OpenMP | \*\* |        |       |
 
 \* Builds, but fails test.
 
-\*\* Hits a compiler error, currently debugging.
+\*\* Internal compiler error.

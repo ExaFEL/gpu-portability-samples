@@ -1,1 +1,4 @@
-module load omp/2020.07.30.001
+module load oneapi
+
+export CXXFLAGS="-Wall -std=c++11 -fiopenmp"
+export LDFLAGS="-fiopenmp"
