@@ -43,7 +43,7 @@ int main() {
 
 #pragma omp barrier
 
-        for (int idx = (omp_get_team_num() * omp_get_num_threads()) + omp_get_num_threads(); idx < num_elements;
+        for (int idx = (omp_get_team_num() * omp_get_num_threads()) + omp_get_thread_num(); idx < num_elements;
              idx += omp_get_num_teams() * omp_get_num_threads()) {
           size_t bucket = floor(data[idx] / range * (NUM_BUCKETS - 1));
 #pragma omp atomic
