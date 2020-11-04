@@ -14,7 +14,7 @@ To run:
 
 ```
 qsub -I -n 1 -t 30 -q iris
-source env.sh
+source iris_env.sh
 ./saxpy
 ```
 
