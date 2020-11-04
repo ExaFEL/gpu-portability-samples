@@ -1,10 +1,30 @@
-These instructions are intended for Tulip.
+These instructions are intended for Iris or Tulip.
+
+## Iris
+
+To build:
+
+```
+cd gpu-portability-sample/openmp
+source iris_env.sh
+make
+```
+
+To run:
+
+```
+qsub -I -n 1 -t 30 -q iris
+source iris_env.sh
+./saxpy
+```
+
+## Tulip
 
 To build:
 
 ```
 cd gpu-portability-sample/hip
-source env.sh
+source tulip_env.sh
 make
 ```
 
