@@ -18,17 +18,15 @@ The samples have been tested on the following systems:
 |--------|------|--------|-------|
 | CUDA   |      |        | yes   |
 | HIP    | ††   | yes    |       |
-| Kokkos | \*   | yes    |       |
+| Kokkos | yes  | yes    |       |
 | OpenCL | yes  | yes    |       |
-| OpenMP | \*\* | \*\*\* |       |
+| OpenMP | \*   | \*\*   |       |
 
-\* Builds, but fails test.
-
-\*\* Internal compiler error: `omp_pteam_mem_alloc` is not yet
+\* Internal compiler error: `omp_pteam_mem_alloc` is not yet
 supported. Can work around by commenting out the `allocator` line,
 unclear if it's using shared memory in that case or not.
 
-\*\*\* Internal compiler error.
+\*\* Internal compiler error.
 
 † Note: Requires workaround for `math.h`.
 
