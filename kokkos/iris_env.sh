@@ -1,4 +1,4 @@
-module load oneapi # compilers for kokkos
+module load oneapi/2020.10.30.001 # compilers for kokkos
 module load cmake
 module load kokkos
 
