@@ -1,6 +1,6 @@
-module load oneapi # compilers for kokkos/openmptarget_icpx
+module load oneapi # compilers for kokkos
 module load cmake
-module load kokkos/openmptarget_icpx
+module load kokkos
 
-# only needed for kokkos/openmptarget_icpx
+# only needed for kokkos
 export CMAKE_PREFIX_PATH="$CMAKE_PREFIX_PATH:$KOKKOS_HOME"
