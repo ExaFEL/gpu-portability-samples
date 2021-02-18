@@ -1,5 +1,5 @@
 module load cmake
-module load rocm/3.9.0
+module load rocm/4.0.0
 
 # settings for Kokkos build
 export CXX=hipcc

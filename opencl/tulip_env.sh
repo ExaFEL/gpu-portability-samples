@@ -1,4 +1,4 @@
-module load rocm/3.9.0
+module load rocm/4.0.0
 
 export PATH="$PATH:$HOME/llvm-spirv/install/bin"
 
