@@ -5,7 +5,7 @@ The samples have been tested on the following systems:
 ## Saxpy
 
 |        | Iris | Tulip | Crusher | local |
-|--------+------+-------+---------+-------|
+|--------|------|-------|---------|-------|
 | CUDA   |      |       |         | yes   |
 | HIP    | yes  | yes   | yes     |       |
 | Kokkos | yes  | yes   | yes     |       |
@@ -15,7 +15,7 @@ The samples have been tested on the following systems:
 ## Histogram
 
 |        | Iris | Tulip | Crusher | local |
-|--------+------+-------+---------+-------|
+|--------|------|-------|---------|-------|
 | CUDA   |      |       |         | yes   |
 | HIP    | yes  | yes   | yes     |       |
 | Kokkos | yes  | yes   | yes     |       |
