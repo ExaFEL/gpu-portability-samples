@@ -44,6 +44,8 @@ static std::vector<cl_uchar> read_file(const std::string &filename) {
   std::ifstream is(filename, std::ios::binary);
   std::vector<cl_uchar> ret;
   if (!is.good()) {
+    std::cerr << "unable to open file: " << filename << std::endl << std::flush;
+    assert(false);
     return ret;
   }
 

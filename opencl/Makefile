@@ -15,8 +15,10 @@ BIN := saxpy histogram
 
 ifeq ($(USE_SPIRV),1)
   SPIRV_DEPS := $(BIN:%=%_kernel32.spv) $(BIN:%=%_kernel64.spv)
+  CXXFLAGS += -DUSE_SPIRV=1
 else
   SPIRV_DEPS :=
+  CXXFLAGS += -DUSE_SPIRV=0
 endif
 
 .PHONY: all
