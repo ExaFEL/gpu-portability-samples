@@ -1,11 +1,12 @@
-CC := clang
-CXX := clang++
-LLVM_SPIRV ?= llvm-spirv
+CC ?= clang
+CXX ?= clang++
 
+# Note: this has to be a Clang with the experimental SPIR-V target enabled
+OPENCL_CC ?= clang
 OPENCL64_FLAGS ?=
-OPENCL64_FLAGS += -Wall -cl-std=CL1.2 -target spir64 -emit-llvm -Xclang -finclude-default-header -flto
+OPENCL64_FLAGS += -Wall -fintegrated-objemitter -target spirv64v1.0
 OPENCL32_FLAGS ?=
-OPENCL32_FLAGS += -Wall -cl-std=CL1.2 -target spir   -emit-llvm -Xclang -finclude-default-header -flto
+OPENCL32_FLAGS += -Wall -fintegrated-objemitter -target spirv32v1.0
 CXXFLAGS ?=
 CXXFLAGS += -Wall -std=c++11
 LDFLAGS ?=
@@ -30,14 +31,11 @@ $(BIN): %:%_main.o $(SPIRV_DEPS)
 %.o:%.cc
 	$(CXX) -c -o $@ $(CXXFLAGS) $<
 
-%64.ll:%.cl
-	$(CC) -c -o $@ $(OPENCL64_FLAGS) $<
+%64.spv:%.cl
+	$(OPENCL_CC) -c -o $@ $(OPENCL64_FLAGS) $<
 
-%32.ll:%.cl
-	$(CC) -c -o $@ $(OPENCL32_FLAGS) $<
-
-%.spv:%.ll
-	$(LLVM_SPIRV) $< -o $@
+%32.spv:%.cl
+	$(OPENCL_CC) -c -o $@ $(OPENCL32_FLAGS) $<
 
 .PHONY: clean
 clean:
