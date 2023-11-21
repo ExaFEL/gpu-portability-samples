@@ -1,5 +1,5 @@
-CC ?= clang
-CXX ?= clang++
+CC ?= gcc
+CXX ?= g++
 
 # Note: this has to be a Clang with the experimental SPIR-V target enabled
 OPENCL_CC ?= clang

@@ -120,12 +120,14 @@ int main(int argc, char **argv) {
   CHECK_ERROR(err);
 
 #if !defined(USE_SPIRV) || USE_SPIRV == 1
+  printf("Using SPIR-V code path\n");
   const char *filename =
       (sizeof(void *) == 8) ? "saxpy_kernel64.spv" : "saxpy_kernel32.spv";
   std::vector<cl_uchar> spirv = read_file(filename);
   cl::Program program(
       clCreateProgramWithIL(context(), spirv.data(), spirv.size(), &err));
 #else
+  printf("Using JIT code path\n");
   const char *filename = "saxpy_kernel.cl";
   std::vector<cl_uchar> src = read_file(filename);
   std::string srcs((const char *)src.data(), src.size());
