@@ -183,10 +183,36 @@ int main(int argc, char **argv) {
                                       buffer_size);
 
   float error = 0.0;
+  long long first_bad = -1;
+  size_t bad_count;
+  float bad_value = 4.0f;
   for (size_t idx = 0; idx < num_elements; idx++) {
+    if (fabs(z[idx] - 4.0f) > 0.0) {
+      if (z[idx] == bad_value) {
+	bad_count++;
+      } else {
+	if (first_bad >= 0) {
+	  if (bad_count > 0) {
+	    printf("bad value at z[%lld] = %e (repeats %lu times)\n", first_bad, bad_value, bad_count);
+	  } else {
+	    printf("bad value at z[%lld] = %e\n", first_bad, bad_value);
+	  }
+	}
+	first_bad = idx;
+	bad_count = 0;
+	bad_value = z[idx];
+      }
+    }
     error = fmax(error, fabs(z[idx] - 4.0f));
   }
-  printf("error: %e (%s)\n", error, error == 0.0 ? "PASS" : "FAIL");
+  if (first_bad >= 0) {
+    if (bad_count > 0) {
+      printf("bad value at z[%lld] = %e (repeats %lu times)\n", first_bad, bad_value, bad_count);
+    } else {
+      printf("bad value at z[%lld] = %e\n", first_bad, bad_value);
+    }
+  }
+  printf("status: %s\n", first_bad < 0 ? "PASS" : "FAIL");
 
   queue.enqueueUnmapMemObject(d_z, z);
 
