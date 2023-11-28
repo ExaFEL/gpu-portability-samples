@@ -120,12 +120,18 @@ int main(int argc, char **argv) {
   CHECK_ERROR(err);
 
 #if !defined(USE_SPIRV) || USE_SPIRV == 1
-  const char *filename = (sizeof(void *) == 8) ? "histogram_kernel64.spv"
-                                               : "histogram_kernel32.spv";
+  printf("Using SPIR-V code path\n");
+  const char *filename =
+#ifdef LOAD_SPIRV_T
+    (sizeof(void *) == 8) ? "histogram_kernel64_t.spv" : "histogram_kernel32_t.spv";
+#else
+    (sizeof(void *) == 8) ? "histogram_kernel64.spv" : "histogram_kernel32.spv";
+#endif
   std::vector<cl_uchar> spirv = read_file(filename);
   cl::Program program(
       clCreateProgramWithIL(context(), spirv.data(), spirv.size(), &err));
 #else
+  printf("Using JIT code path\n");
   const char *filename = "histogram_kernel.cl";
   std::vector<cl_uchar> src = read_file(filename);
   std::string srcs((const char *)src.data(), src.size());

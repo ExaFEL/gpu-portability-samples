@@ -1,5 +1,6 @@
 *~
 *.o
+*.bc
 *.ll
 *.spv
 *.error
@@ -9,4 +10,5 @@
 saxpy
 saxpy_t
 histogram
+histogram_t
 build
