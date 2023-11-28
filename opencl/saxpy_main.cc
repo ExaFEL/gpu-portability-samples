@@ -122,7 +122,12 @@ int main(int argc, char **argv) {
 #if !defined(USE_SPIRV) || USE_SPIRV == 1
   printf("Using SPIR-V code path\n");
   const char *filename =
-      (sizeof(void *) == 8) ? "saxpy_kernel64.spv" : "saxpy_kernel32.spv";
+#ifdef LOAD_SPIRV_T
+    (sizeof(void *) == 8) ? "saxpy_kernel64_t.spv" : "saxpy_kernel32_t.spv";
+#else
+    (sizeof(void *) == 8) ? "saxpy_kernel64.spv" : "saxpy_kernel32.spv";
+#endif
+  printf("Loading SPIR-V from file: %s\n", filename);
   std::vector<cl_uchar> spirv = read_file(filename);
   cl::Program program(
       clCreateProgramWithIL(context(), spirv.data(), spirv.size(), &err));
